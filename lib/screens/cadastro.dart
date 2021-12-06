@@ -1,5 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_password_strength/flutter_password_strength.dart';
+import 'package:projeto_pb/screens/Loading.dart';
+import 'package:projeto_pb/screens/error.dart';
+import 'package:projeto_pb/screens/home.dart';
+import 'package:projeto_pb/services/auth.dart';
 
 class Cadastro extends StatefulWidget {
   const Cadastro({Key? key}) : super(key: key);
@@ -9,9 +15,38 @@ class Cadastro extends StatefulWidget {
 }
 
 class _CadastroState extends State<Cadastro> {
-  final _formKey1 = GlobalKey<FormState>();
-  final _formKey2 = GlobalKey<FormState>();
-  final _formKey3 = GlobalKey<FormState>();
+  bool _initialized = false;
+  bool _error = false;
+
+  // Define an async function to initialize FlutterFire
+  void initializeFlutterFire() async {
+    try {
+      // Wait for Firebase to initialize and set `_initialized` state to true
+      await Firebase.initializeApp();
+      setState(() {
+        _initialized = true;
+      });
+    } catch (e) {
+      // Set `_error` state to true if Firebase initialization fails
+      setState(() {
+        _error = true;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    initializeFlutterFire();
+    super.initState();
+  }
+
+  final _formKey = GlobalKey<FormState>();
+
+  final AuthenticationServices _auth = AuthenticationServices();
+
+  TextEditingController _nameController = TextEditingController();
+  TextEditingController _emailController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -29,12 +64,13 @@ class _CadastroState extends State<Cadastro> {
                 fit: BoxFit.cover,
               ),
             ),
-            child: Column(
-              children: [
-                Image.asset("assets/logo.png"),
-                Form(
-                  key: _formKey1,
-                  child: TextFormField(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  Image.asset("assets/logo.png"),
+                  TextFormField(
+                    controller: _nameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return "Por favor preencha nome";
@@ -48,13 +84,11 @@ class _CadastroState extends State<Cadastro> {
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24))),
                   ),
-                ),
-                const SizedBox(
-                  height: 40,
-                ),
-                Form(
-                  key: _formKey2,
-                  child: TextFormField(
+                  const SizedBox(
+                    height: 40,
+                  ),
+                  TextFormField(
+                    controller: _emailController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return "Por favor preencha e-mail";
@@ -68,13 +102,11 @@ class _CadastroState extends State<Cadastro> {
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24))),
                   ),
-                ),
-                const SizedBox(
-                  height: 40,
-                ),
-                Form(
-                  key: _formKey3,
-                  child: TextFormField(
+                  const SizedBox(
+                    height: 40,
+                  ),
+                  TextFormField(
+                    controller: _passwordController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return "Por favor preencha a senha";
@@ -89,50 +121,51 @@ class _CadastroState extends State<Cadastro> {
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24))),
                   ),
-                ),
-                const SizedBox(
-                  height: 30,
-                ),
-                FlutterPasswordStrength(
-                    password: _password,
-                    strengthCallback: (strength) {
-                      debugPrint(strength.toString());
-                    }),
-                const SizedBox(
-                  height: 30,
-                ),
-                Container(
-                  width: double.infinity,
-                  height: 40,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      primary: Colors.red,
-                    ),
-                    onPressed: () {
-                      if (_formKey1.currentState!.validate()) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Processing Data')),
-                        );
-                      }
-                      if (_formKey2.currentState!.validate()) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Processing Data')),
-                        );
-                      }
-                      if (_formKey3.currentState!.validate()) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Processing Data')),
-                        );
-                      }
-                    },
-                    child: const Text("CONCLUIR CADASTRO"),
+                  const SizedBox(
+                    height: 30,
                   ),
-                ),
-              ],
+                  FlutterPasswordStrength(
+                      password: _password,
+                      strengthCallback: (strength) {
+                        debugPrint(strength.toString());
+                      }),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  Container(
+                    width: double.infinity,
+                    height: 40,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        primary: Colors.red,
+                      ),
+                      onPressed: () async {
+                        await FirebaseAuth.instance
+                            .createUserWithEmailAndPassword(
+                          email: _emailController.text,
+                          password: _passwordController.text,
+                        );
+                        setState(() {});
+                      },
+                      child: const Text("CONCLUIR CADASTRO"),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
     );
+    if (_error) {
+      return ErrorScreen();
+    }
+
+    // Show a loader until FlutterFire is initialized
+    if (!_initialized) {
+      return LoadingScreen();
+    }
+
+    return HomeScreen();
   }
 }
