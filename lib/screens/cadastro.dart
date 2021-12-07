@@ -2,9 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_password_strength/flutter_password_strength.dart';
-import 'package:projeto_pb/screens/Loading.dart';
-import 'package:projeto_pb/screens/error.dart';
-import 'package:projeto_pb/screens/home.dart';
+import 'package:projeto_pb/controller/controller_cadastro.dart';
 
 class Cadastro extends StatefulWidget {
   const Cadastro({Key? key}) : super(key: key);
@@ -44,7 +42,7 @@ class _CadastroState extends State<Cadastro> {
   TextEditingController _nameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
-
+  var _controllerCadastro = ControllerCadastro();
   @override
   Widget build(BuildContext context) {
     var _password;
@@ -137,15 +135,9 @@ class _CadastroState extends State<Cadastro> {
                         primary: Colors.red,
                       ),
                       onPressed: () async {
-                        try {
-                          await FirebaseAuth.instance
-                              .createUserWithEmailAndPassword(
-                                  email: _emailController.text,
-                                  password: _passwordController.text)
-                              .then((userCredential) =>
-                                  print(userCredential.user!.email));
-                        } on FirebaseAuthException catch (e) {
-                          print(e);
+                        if (_formKey.currentState!.validate()) {
+                          await _controllerCadastro.signup(
+                              _emailController.text, _passwordController.text);
                         }
                       },
                       child: const Text("CONCLUIR CADASTRO"),
