@@ -1,6 +1,7 @@
 # projeto_pb
 
-A new Flutter project.
+CampassFlixApp is a project basead in Flutter and is about movies.
+App was development for studants in Flutter.
 
 ## Getting Started
 
