@@ -5,7 +5,6 @@ import 'package:flutter_password_strength/flutter_password_strength.dart';
 import 'package:projeto_pb/screens/Loading.dart';
 import 'package:projeto_pb/screens/error.dart';
 import 'package:projeto_pb/screens/home.dart';
-import 'package:projeto_pb/services/auth.dart';
 
 class Cadastro extends StatefulWidget {
   const Cadastro({Key? key}) : super(key: key);
@@ -41,8 +40,6 @@ class _CadastroState extends State<Cadastro> {
   }
 
   final _formKey = GlobalKey<FormState>();
-
-  final AuthenticationServices _auth = AuthenticationServices();
 
   TextEditingController _nameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
@@ -140,12 +137,16 @@ class _CadastroState extends State<Cadastro> {
                         primary: Colors.red,
                       ),
                       onPressed: () async {
-                        await FirebaseAuth.instance
-                            .createUserWithEmailAndPassword(
-                          email: _emailController.text,
-                          password: _passwordController.text,
-                        );
-                        setState(() {});
+                        try {
+                          await FirebaseAuth.instance
+                              .createUserWithEmailAndPassword(
+                                  email: _emailController.text,
+                                  password: _passwordController.text)
+                              .then((userCredential) =>
+                                  print(userCredential.user!.email));
+                        } on FirebaseAuthException catch (e) {
+                          print(e);
+                        }
                       },
                       child: const Text("CONCLUIR CADASTRO"),
                     ),
@@ -157,15 +158,5 @@ class _CadastroState extends State<Cadastro> {
         ],
       ),
     );
-    if (_error) {
-      return ErrorScreen();
-    }
-
-    // Show a loader until FlutterFire is initialized
-    if (!_initialized) {
-      return LoadingScreen();
-    }
-
-    return HomeScreen();
   }
 }
