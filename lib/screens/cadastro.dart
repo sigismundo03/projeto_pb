@@ -106,6 +106,11 @@ class _CadastroState extends State<Cadastro> {
                       if (value == null || value.isEmpty) {
                         return "Por favor preencha a senha";
                       }
+                      if (value.length < 8) {
+                        return "Deve conter 8 Caracteres";
+                      }
+                      if (value.contains(RegExp(r"[A-Z]")))
+                        return "Deve conter 1 letra maiuscula";
                     },
                     obscureText: true,
                     keyboardType: TextInputType.emailAddress,
